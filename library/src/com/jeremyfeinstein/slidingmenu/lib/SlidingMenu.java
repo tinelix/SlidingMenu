@@ -29,6 +29,8 @@ import android.widget.RelativeLayout;
 
 import com.jeremyfeinstein.slidingmenu.lib.CustomViewAbove.OnPageChangeListener;
 
+import uk.openvk.android.legacy.R;
+
 public class SlidingMenu extends RelativeLayout {
 
 	private static final String TAG = SlidingMenu.class.getSimpleName();
