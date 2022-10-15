@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -24,6 +25,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -123,7 +125,6 @@ public class SlidingMenu extends RelativeLayout {
 	 * the onClose event occurs, that object's appropriate
 	 * method is invoked.
 	 *
-	 * @see OnCloseEvent
 	 */
 	public interface OnCloseListener {
 
@@ -142,7 +143,6 @@ public class SlidingMenu extends RelativeLayout {
 	 * the onClosed event occurs, that object's appropriate
 	 * method is invoked.
 	 *
-	 * @see OnClosedEvent
 	 */
 	public interface OnClosedListener {
 
@@ -1000,6 +1000,8 @@ public class SlidingMenu extends RelativeLayout {
             Resources resources = getContext().getResources();
             int nav_height_id = resources.getIdentifier("navigation_bar_height", "dimen", "android");
             int nav_width_id = resources.getIdentifier("navigation_bar_width", "dimen", "android");
+            int rotation = ((WindowManager) getContext().getSystemService(
+                    Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
             if (nav_height_id > 0) {
                 navigation_height = resources.getDimensionPixelSize(nav_height_id);
             }
@@ -1008,10 +1010,19 @@ public class SlidingMenu extends RelativeLayout {
             }
             if (!mActionbarOverlay) {
                 Log.v(TAG, "setting padding!");
-                if(getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    setPadding(leftPadding, topPadding, rightPadding, navigation_height);
-                } else {
-                    setPadding(leftPadding, topPadding, navigation_width, bottomPadding);
+                switch (rotation) {
+                    case Surface.ROTATION_0:
+                        setPadding(leftPadding, topPadding, rightPadding, navigation_height);
+                        break;
+                    case Surface.ROTATION_90:
+                        setPadding(leftPadding, topPadding, navigation_width, bottomPadding);
+                        break;
+                    case Surface.ROTATION_180:
+                        setPadding(leftPadding, nav_height_id, rightPadding, bottomPadding);
+                        break;
+                    default:
+                        setPadding(navigation_width, topPadding, rightPadding, bottomPadding);
+                        break;
                 }
             }
         } else {
