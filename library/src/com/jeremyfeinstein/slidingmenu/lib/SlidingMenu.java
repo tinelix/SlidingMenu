@@ -22,11 +22,15 @@ import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
@@ -76,12 +80,12 @@ public class SlidingMenu extends RelativeLayout {
 	private CustomViewBehind mViewBehind;
 
 	private OnOpenListener mOpenListener;
-	
+
 	private OnOpenListener mSecondaryOpenListner;
 
 	private OnCloseListener mCloseListener;
 
-	/**
+    /**
 	 * The listener interface for receiving onOpen events.
 	 * The class that is interested in processing a onOpen
 	 * event implements this interface, and the object created
@@ -205,7 +209,7 @@ public class SlidingMenu extends RelativeLayout {
 	 */
 	public SlidingMenu(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		
+
 		LayoutParams behindParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 		mViewBehind = new CustomViewBehind(context);
 		addView(mViewBehind, behindParams);
@@ -247,7 +251,7 @@ public class SlidingMenu extends RelativeLayout {
 		}
 		int viewBehind = ta.getResourceId(R.styleable.SlidingMenu_viewBehind, -1);
 		if (viewBehind != -1) {
-			setMenu(viewBehind); 
+			setMenu(viewBehind);
 		} else {
 			setMenu(new FrameLayout(context));
 		}
@@ -288,7 +292,7 @@ public class SlidingMenu extends RelativeLayout {
 
 	/**
 	 * Attaches the SlidingMenu to an entire Activity
-	 * 
+	 *
 	 * @param activity the Activity
 	 * @param slideStyle either SLIDING_CONTENT or SLIDING_WINDOW
 	 */
@@ -298,7 +302,7 @@ public class SlidingMenu extends RelativeLayout {
 
 	/**
 	 * Attaches the SlidingMenu to an entire Activity
-	 * 
+	 *
 	 * @param activity the Activity
 	 * @param slideStyle either SLIDING_CONTENT or SLIDING_WINDOW
 	 * @param actionbarOverlay whether or not the ActionBar is overlaid
@@ -471,7 +475,7 @@ public class SlidingMenu extends RelativeLayout {
 			setSlidingEnabled(false);
 			mViewAbove.setCustomViewBehind(null);
 			mViewAbove.setCurrentItem(1);
-			//			mViewBehind.setCurrentItem(0);	
+			//			mViewBehind.setCurrentItem(0);
 		} else {
 			mViewAbove.setCurrentItem(1);
 			//			mViewBehind.setCurrentItem(1);
@@ -558,7 +562,7 @@ public class SlidingMenu extends RelativeLayout {
 	public boolean isMenuShowing() {
 		return mViewAbove.getCurrentItem() == 0 || mViewAbove.getCurrentItem() == 2;
 	}
-	
+
 	/**
 	 * Checks if is the behind view showing.
 	 *
@@ -663,7 +667,7 @@ public class SlidingMenu extends RelativeLayout {
 	public float getBehindScrollScale() {
 		return mViewBehind.getScrollScale();
 	}
-	
+
 	/**
 	 * Gets the touch mode margin threshold
 	 * @return the touch mode margin threshold
@@ -671,7 +675,7 @@ public class SlidingMenu extends RelativeLayout {
 	public int getTouchmodeMarginThreshold() {
 		return mViewBehind.getMarginThreshold();
 	}
-	
+
 	/**
 	 * Set the touch mode margin threshold
 	 * @param touchmodeMarginThreshold
@@ -886,17 +890,17 @@ public class SlidingMenu extends RelativeLayout {
 		mOpenListener = listener;
 	}
 
-	
+
 	/**
 	 * Sets the OnOpenListner for secondary menu  {@link OnOpenListener#onOpen() OnOpenListener.onOpen()} will be called when the secondary SlidingMenu is opened
-	 * 
+	 *
 	 * @param listener the new OnOpenListener
 	 */
-	
+
 	public void setSecondaryOnOpenListner(OnOpenListener listener) {
 		mSecondaryOpenListner = listener;
 	}
-	
+
 	/**
 	 * Sets the OnCloseListener. {@link OnCloseListener#onClose() OnCloseListener.onClose()} will be called when any one of the SlidingMenu is closed
 	 *
@@ -1002,11 +1006,14 @@ public class SlidingMenu extends RelativeLayout {
             int nav_width_id = resources.getIdentifier("navigation_bar_width", "dimen", "android");
             int rotation = ((WindowManager) getContext().getSystemService(
                     Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
-            if (nav_height_id > 0) {
-                navigation_height = resources.getDimensionPixelSize(nav_height_id);
-            }
-            if(nav_width_id > 0) {
-                navigation_width = resources.getDimensionPixelSize(nav_width_id);
+
+            if(visibleNavBar()) {
+                if (nav_height_id > 0) {
+                    navigation_height = resources.getDimensionPixelSize(nav_height_id);
+                }
+                if (nav_width_id > 0) {
+                    navigation_width = resources.getDimensionPixelSize(nav_width_id);
+                }
             }
             if (!mActionbarOverlay) {
                 Log.v(TAG, "setting padding!");
@@ -1034,7 +1041,25 @@ public class SlidingMenu extends RelativeLayout {
 		return true;
 	}
 
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private boolean visibleNavBar() {
+        Display d = getDisplay();
+
+        DisplayMetrics realDisplayMetrics = new DisplayMetrics();
+        d.getRealMetrics(realDisplayMetrics);
+
+        int realHeight = realDisplayMetrics.heightPixels;
+        int realWidth = realDisplayMetrics.widthPixels;
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        d.getMetrics(displayMetrics);
+
+        int displayHeight = displayMetrics.heightPixels;
+        int displayWidth = displayMetrics.widthPixels;
+
+        return (realWidth - displayWidth) > 0 || (realHeight - displayHeight) > 0;
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void manageLayers(float percentOpen) {
 		if (Build.VERSION.SDK_INT < 11) return;
 
