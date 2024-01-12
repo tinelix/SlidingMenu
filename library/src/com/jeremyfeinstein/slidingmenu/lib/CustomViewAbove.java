@@ -300,7 +300,7 @@ public class CustomViewAbove extends ViewGroup {
 	float distanceInfluenceForSnapDuration(float f) {
 		f -= 0.5f; // center the values about 0.
 		f *= 0.3f * Math.PI / 2.0f;
-		return (float) FloatMath.sin(f);
+		return (float) Math.sin(f);
 	}
 
 	public int getDestScrollX(int page) {
@@ -430,7 +430,7 @@ public class CustomViewAbove extends ViewGroup {
 	}
 
 	public void setContent(View v) {
-		if (mContent != null) 
+		if (mContent != null)
 			this.removeView(mContent);
 		mContent = v;
 		addView(mContent);
@@ -446,14 +446,17 @@ public class CustomViewAbove extends ViewGroup {
 
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		try {
+			int width = getDefaultSize(0, widthMeasureSpec);
+			int height = getDefaultSize(0, heightMeasureSpec);
+			setMeasuredDimension(width, height);
 
-		int width = getDefaultSize(0, widthMeasureSpec);
-		int height = getDefaultSize(0, heightMeasureSpec);
-		setMeasuredDimension(width, height);
-
-		final int contentWidth = getChildMeasureSpec(widthMeasureSpec, 0, width);
-		final int contentHeight = getChildMeasureSpec(heightMeasureSpec, 0, height);
-		mContent.measure(contentWidth, contentHeight);
+			final int contentWidth = getChildMeasureSpec(widthMeasureSpec, 0, width);
+			final int contentHeight = getChildMeasureSpec(heightMeasureSpec, 0, height);
+			mContent.measure(contentWidth, contentHeight);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	@Override
@@ -473,13 +476,17 @@ public class CustomViewAbove extends ViewGroup {
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
 		final int width = r - l;
 		final int height = b - t;
-		mContent.layout(0, 0, width, height);
+		try {
+			mContent.layout(0, 0, width, height);
+		} catch (Exception ignored) {
+
+		}
 	}
 
 	public void setAboveOffset(int i) {
 		//		RelativeLayout.LayoutParams params = ((RelativeLayout.LayoutParams)mContent.getLayoutParams());
 		//		params.setMargins(i, params.topMargin, params.rightMargin, params.bottomMargin);
-		mContent.setPadding(i, mContent.getPaddingTop(), 
+		mContent.setPadding(i, mContent.getPaddingTop(),
 				mContent.getPaddingRight(), mContent.getPaddingBottom());
 	}
 
@@ -697,7 +704,7 @@ public class CustomViewAbove extends ViewGroup {
 			mLastMotionX = mInitialMotionX = ev.getX();
 			break;
 		case MotionEvent.ACTION_MOVE:
-			if (!mIsBeingDragged) {	
+			if (!mIsBeingDragged) {
 				determineDrag(ev);
 				if (mIsUnableToDrag)
 					return false;
@@ -739,7 +746,7 @@ public class CustomViewAbove extends ViewGroup {
 					final int totalDelta = (int) (x - mInitialMotionX);
 					int nextPage = determineTargetPage(pageOffset, initialVelocity, totalDelta);
 					setCurrentItemInternal(nextPage, true, true, initialVelocity);
-				} else {	
+				} else {
 					setCurrentItemInternal(mCurItem, true, true, initialVelocity);
 				}
 				mActivePointerId = INVALID_POINTER;
@@ -773,7 +780,7 @@ public class CustomViewAbove extends ViewGroup {
 		}
 		return true;
 	}
-	
+
 	private void determineDrag(MotionEvent ev) {
 		final int activePointerId = mActivePointerId;
 		final int pointerIndex = getPointerIndex(ev, activePointerId);
@@ -785,7 +792,7 @@ public class CustomViewAbove extends ViewGroup {
 		final float y = MotionEventCompat.getY(ev, pointerIndex);
 		final float dy = y - mLastMotionY;
 		final float yDiff = Math.abs(dy);
-		if (xDiff > (isMenuOpen()?mTouchSlop/2:mTouchSlop) && xDiff > yDiff && thisSlideAllowed(dx)) {		
+		if (xDiff > (isMenuOpen()?mTouchSlop/2:mTouchSlop) && xDiff > yDiff && thisSlideAllowed(dx)) {
 			startDrag();
 			mLastMotionX = x;
 			mLastMotionY = y;
@@ -800,7 +807,7 @@ public class CustomViewAbove extends ViewGroup {
 	public void scrollTo(int x, int y) {
 		super.scrollTo(x, y);
 		mScrollX = x;
-		mViewBehind.scrollBehindTo(mContent, x, y);	
+		mViewBehind.scrollBehindTo(mContent, x, y);
 		((SlidingMenu)getParent()).manageLayers(getPercentOpen());
 	}
 
@@ -824,11 +831,17 @@ public class CustomViewAbove extends ViewGroup {
 
 	@Override
 	protected void dispatchDraw(Canvas canvas) {
-		super.dispatchDraw(canvas);
-		// Draw the margin drawable if needed.
-		mViewBehind.drawShadow(mContent, canvas);
-		mViewBehind.drawFade(mContent, canvas, getPercentOpen());
-		mViewBehind.drawSelector(mContent, canvas, getPercentOpen());
+		try {
+			super.dispatchDraw(canvas);
+			// Draw the margin drawable if needed.
+			mViewBehind.drawShadow(mContent, canvas);
+			mViewBehind.drawFade(mContent, canvas, getPercentOpen());
+			mViewBehind.drawSelector(mContent, canvas, getPercentOpen());
+		} catch (StackOverflowError ex) {
+			ex.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	// variables for drawing
