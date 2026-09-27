@@ -1,3 +1,21 @@
+/*
+ * Copyright 2012-2014 Jeremy Feinstein
+ * Copyright 2026 Dmitry Tretyakov
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
 package com.jeremyfeinstein.slidingmenu.lib;
 
 import java.lang.reflect.Method;
@@ -38,7 +56,7 @@ import android.widget.RelativeLayout;
 
 import com.jeremyfeinstein.slidingmenu.lib.CustomViewAbove.OnPageChangeListener;
 
-import uk.openvk.android.legacy.R;
+import com.jeremyfeinstein.slidingmenu.lib.R;
 
 public class SlidingMenu extends RelativeLayout {
 
@@ -46,6 +64,7 @@ public class SlidingMenu extends RelativeLayout {
 
 	public static final int SLIDING_WINDOW = 0;
 	public static final int SLIDING_CONTENT = 1;
+	public static final int FLEXIBLE_WINDOW = 2;
 	private boolean mActionbarOverlay = false;
 
 	/** Constant value for use with setTouchModeAbove(). Allows the SlidingMenu to be opened with a swipe
@@ -308,8 +327,10 @@ public class SlidingMenu extends RelativeLayout {
 	 * @param actionbarOverlay whether or not the ActionBar is overlaid
 	 */
 	public void attachToActivity(Activity activity, int slideStyle, boolean actionbarOverlay) {
-		if (slideStyle != SLIDING_WINDOW && slideStyle != SLIDING_CONTENT)
-			throw new IllegalArgumentException("slideStyle must be either SLIDING_WINDOW or SLIDING_CONTENT");
+		if (slideStyle != SLIDING_WINDOW && slideStyle != SLIDING_CONTENT && slideStyle != FLEXIBLE_WINDOW)
+			throw new IllegalArgumentException(
+			        "slideStyle must be either SLIDING_WINDOW, SLIDING_CONTENT or FLEXIBLE_WINDOW"
+            );
 
 		if (getParent() != null)
 			throw new IllegalStateException("This SlidingMenu appears to already be attached");
@@ -320,7 +341,7 @@ public class SlidingMenu extends RelativeLayout {
 		a.recycle();
 
 		switch (slideStyle) {
-		case SLIDING_WINDOW:
+		default:
 			mActionbarOverlay = false;
 			ViewGroup decor = (ViewGroup) activity.getWindow().getDecorView();
 			ViewGroup decorChild = (ViewGroup) decor.getChildAt(0);
@@ -343,6 +364,9 @@ public class SlidingMenu extends RelativeLayout {
 				content.setBackgroundResource(background);
 			break;
 		}
+
+		if(slideStyle == FLEXIBLE_WINDOW)
+		    mViewAbove.setFlexibleMode(true);
 	}
 
 	/**
@@ -625,6 +649,16 @@ public class SlidingMenu extends RelativeLayout {
 		setAboveOffset(i);
 	}
 
+	/**
+	 * Sets the above width.
+	 *
+	 * @param i the new above width, in pixels
+	 */
+
+	public void setAboveWidth(int i) {
+		mViewAbove.setAboveWidth(i);
+	}
+	
 	/**
 	 * Sets the behind width.
 	 *
