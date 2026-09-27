@@ -1,3 +1,21 @@
+/*
+ * Copyright 2012-2014 Jeremy Feinstein
+ * Copyright 2026 Dmitry Tretyakov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.jeremyfeinstein.slidingmenu.lib;
 
 import java.util.ArrayList;
@@ -7,6 +25,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v4.view.KeyEventCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.VelocityTrackerCompat;
@@ -88,6 +107,7 @@ public class CustomViewAbove extends ViewGroup {
 	private CustomViewBehind mViewBehind;
 	//	private int mMode;
 	private boolean mEnabled = true;
+    private boolean mFlexible = false;
 
 	private OnPageChangeListener mOnPageChangeListener;
 	private OnPageChangeListener mInternalPageChangeListener;
@@ -97,9 +117,11 @@ public class CustomViewAbove extends ViewGroup {
 	private OnClosedListener mClosedListener;
 	private OnOpenedListener mOpenedListener;
 
+    private int mAboveWidth;
+
 	private List<View> mIgnoredViews = new ArrayList<View>();
 
-	//	private int mScrollState = SCROLL_STATE_IDLE;
+    //	private int mScrollState = SCROLL_STATE_IDLE;
 
 	/**
 	 * Callback interface for responding to changing state of the selected page.
@@ -366,6 +388,14 @@ public class CustomViewAbove extends ViewGroup {
 		mEnabled = b;
 	}
 
+	public boolean isFlexible() {
+	    return mFlexible;
+    }
+
+    public void setFlexibleMode(boolean b) {
+        mFlexible = b;
+    }
+
 	/**
 	 * Like {@link View#scrollBy}, but scroll smoothly instead of immediately.
 	 *
@@ -389,10 +419,13 @@ public class CustomViewAbove extends ViewGroup {
 			setScrollingCacheEnabled(false);
 			return;
 		}
+
 		int sx = getScrollX();
 		int sy = getScrollY();
+
 		int dx = x - sx;
 		int dy = y - sy;
+
 		if (dx == 0 && dy == 0) {
 			completeScroll();
 			if (isMenuOpen()) {
@@ -430,7 +463,7 @@ public class CustomViewAbove extends ViewGroup {
 	}
 
 	public void setContent(View v) {
-		if (mContent != null)
+		if (mContent != null) 
 			this.removeView(mContent);
 		mContent = v;
 		addView(mContent);
@@ -486,8 +519,16 @@ public class CustomViewAbove extends ViewGroup {
 	public void setAboveOffset(int i) {
 		//		RelativeLayout.LayoutParams params = ((RelativeLayout.LayoutParams)mContent.getLayoutParams());
 		//		params.setMargins(i, params.topMargin, params.rightMargin, params.bottomMargin);
-		mContent.setPadding(i, mContent.getPaddingTop(),
+		mContent.setPadding(i, mContent.getPaddingTop(), 
 				mContent.getPaddingRight(), mContent.getPaddingBottom());
+	}
+
+	public void setAboveWidth(int i) {
+		mContent.setPadding(mContent.getPaddingLeft(), mContent.getPaddingTop(),
+				i, mContent.getPaddingBottom());
+
+		if(mAboveWidth == 0 || !mFlexible)
+		    mAboveWidth = i;
 	}
 
 
@@ -555,6 +596,7 @@ public class CustomViewAbove extends ViewGroup {
 			int oldY = getScrollY();
 			int x = mScroller.getCurrX();
 			int y = mScroller.getCurrY();
+
 			if (oldX != x || oldY != y) {
 				scrollTo(x, y);
 			}
@@ -704,7 +746,7 @@ public class CustomViewAbove extends ViewGroup {
 			mLastMotionX = mInitialMotionX = ev.getX();
 			break;
 		case MotionEvent.ACTION_MOVE:
-			if (!mIsBeingDragged) {
+			if (!mIsBeingDragged) {	
 				determineDrag(ev);
 				if (mIsUnableToDrag)
 					return false;
@@ -746,7 +788,7 @@ public class CustomViewAbove extends ViewGroup {
 					final int totalDelta = (int) (x - mInitialMotionX);
 					int nextPage = determineTargetPage(pageOffset, initialVelocity, totalDelta);
 					setCurrentItemInternal(nextPage, true, true, initialVelocity);
-				} else {
+				} else {	
 					setCurrentItemInternal(mCurItem, true, true, initialVelocity);
 				}
 				mActivePointerId = INVALID_POINTER;
@@ -780,7 +822,7 @@ public class CustomViewAbove extends ViewGroup {
 		}
 		return true;
 	}
-
+	
 	private void determineDrag(MotionEvent ev) {
 		final int activePointerId = mActivePointerId;
 		final int pointerIndex = getPointerIndex(ev, activePointerId);
@@ -792,7 +834,7 @@ public class CustomViewAbove extends ViewGroup {
 		final float y = MotionEventCompat.getY(ev, pointerIndex);
 		final float dy = y - mLastMotionY;
 		final float yDiff = Math.abs(dy);
-		if (xDiff > (isMenuOpen()?mTouchSlop/2:mTouchSlop) && xDiff > yDiff && thisSlideAllowed(dx)) {
+		if (xDiff > (isMenuOpen()?mTouchSlop/2:mTouchSlop) && xDiff > yDiff && thisSlideAllowed(dx)) {		
 			startDrag();
 			mLastMotionX = x;
 			mLastMotionY = y;
@@ -804,10 +846,25 @@ public class CustomViewAbove extends ViewGroup {
 	}
 
 	@Override
-	public void scrollTo(int x, int y) {
+	public void scrollTo(final int x, final int y) {
 		super.scrollTo(x, y);
 		mScrollX = x;
+
 		mViewBehind.scrollBehindTo(mContent, x, y);
+
+		/*
+         * The flexible sliding menu mode does not work quite accurately,
+         * since the right side of the window does not move completely synchronously.
+         *
+         * This can reduce the discrepancies slightly.
+         */
+        if(isFlexible()) {
+		    if(mCurItem == 0)
+                setAboveWidth((-x));
+		    else
+                setAboveWidth((int)(-x - (180.0f * (getPercentOpen() / 1.2f))));
+        }
+
 		((SlidingMenu)getParent()).manageLayers(getPercentOpen());
 	}
 
