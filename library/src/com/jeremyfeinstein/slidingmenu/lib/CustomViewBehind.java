@@ -19,6 +19,7 @@
 package com.jeremyfeinstein.slidingmenu.lib;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -162,9 +163,11 @@ public class CustomViewBehind extends ViewGroup {
 		int width = getDefaultSize(0, widthMeasureSpec);
 		int height = getDefaultSize(0, heightMeasureSpec);
 		setMeasuredDimension(width, height);
+
 		final int contentWidth = getChildMeasureSpec(widthMeasureSpec, 0, width-mWidthOffset);
 		final int contentHeight = getChildMeasureSpec(heightMeasureSpec, 0, height);
 		mContent.measure(contentWidth, contentHeight);
+
 		if (mSecondaryContent != null)
 			mSecondaryContent.measure(contentWidth, contentHeight);
 	}
@@ -459,5 +462,4 @@ public class CustomViewBehind extends ViewGroup {
 		mSelectorDrawable = b;
 		refreshDrawableState();
 	}
-
 }

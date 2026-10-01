@@ -1,11 +1,11 @@
 /*
  * Copyright 2012-2014 Jeremy Feinstein
  * Copyright 2026 Dmitry Tretyakov
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -13,7 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package com.jeremyfeinstein.slidingmenu.lib;
@@ -62,9 +62,9 @@ public class SlidingMenu extends RelativeLayout {
 
 	private static final String TAG = SlidingMenu.class.getSimpleName();
 
-	public static final int SLIDING_WINDOW = 0;
+	public static final int SLIDING_WINDOW  = 0;
 	public static final int SLIDING_CONTENT = 1;
-	public static final int FLEXIBLE_WINDOW = 2;
+    public static final int FLEXIBLE_WINDOW = 2;
 	private boolean mActionbarOverlay = false;
 
 	/** Constant value for use with setTouchModeAbove(). Allows the SlidingMenu to be opened with a swipe
@@ -99,10 +99,11 @@ public class SlidingMenu extends RelativeLayout {
 	private CustomViewBehind mViewBehind;
 
 	private OnOpenListener mOpenListener;
-
+	
 	private OnOpenListener mSecondaryOpenListner;
 
 	private OnCloseListener mCloseListener;
+    private int mBehindOriginalWidth;
 
     /**
 	 * The listener interface for receiving onOpen events.
@@ -228,7 +229,7 @@ public class SlidingMenu extends RelativeLayout {
 	 */
 	public SlidingMenu(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-
+		
 		LayoutParams behindParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 		mViewBehind = new CustomViewBehind(context);
 		addView(mViewBehind, behindParams);
@@ -270,7 +271,7 @@ public class SlidingMenu extends RelativeLayout {
 		}
 		int viewBehind = ta.getResourceId(R.styleable.SlidingMenu_viewBehind, -1);
 		if (viewBehind != -1) {
-			setMenu(viewBehind);
+			setMenu(viewBehind); 
 		} else {
 			setMenu(new FrameLayout(context));
 		}
@@ -311,7 +312,7 @@ public class SlidingMenu extends RelativeLayout {
 
 	/**
 	 * Attaches the SlidingMenu to an entire Activity
-	 *
+	 * 
 	 * @param activity the Activity
 	 * @param slideStyle either SLIDING_CONTENT or SLIDING_WINDOW
 	 */
@@ -321,7 +322,7 @@ public class SlidingMenu extends RelativeLayout {
 
 	/**
 	 * Attaches the SlidingMenu to an entire Activity
-	 *
+	 * 
 	 * @param activity the Activity
 	 * @param slideStyle either SLIDING_CONTENT or SLIDING_WINDOW
 	 * @param actionbarOverlay whether or not the ActionBar is overlaid
@@ -499,7 +500,7 @@ public class SlidingMenu extends RelativeLayout {
 			setSlidingEnabled(false);
 			mViewAbove.setCustomViewBehind(null);
 			mViewAbove.setCurrentItem(1);
-			//			mViewBehind.setCurrentItem(0);
+			//			mViewBehind.setCurrentItem(0);	
 		} else {
 			mViewAbove.setCurrentItem(1);
 			//			mViewBehind.setCurrentItem(1);
@@ -586,7 +587,7 @@ public class SlidingMenu extends RelativeLayout {
 	public boolean isMenuShowing() {
 		return mViewAbove.getCurrentItem() == 0 || mViewAbove.getCurrentItem() == 2;
 	}
-
+	
 	/**
 	 * Checks if is the behind view showing.
 	 *
@@ -640,6 +641,16 @@ public class SlidingMenu extends RelativeLayout {
 	}
 
 	/**
+	 * Sets the above width.
+	 *
+	 * @param i the new above width, in pixels
+	 */
+
+	public void setAboveWidth(int i) {
+		mViewAbove.setAboveWidth(i);
+	}
+
+	/**
 	 * Sets the above offset.
 	 *
 	 * @param resID The dimension resource id to be set as the above offset.
@@ -650,22 +661,13 @@ public class SlidingMenu extends RelativeLayout {
 	}
 
 	/**
-	 * Sets the above width.
-	 *
-	 * @param i the new above width, in pixels
-	 */
-
-	public void setAboveWidth(int i) {
-		mViewAbove.setAboveWidth(i);
-	}
-	
-	/**
 	 * Sets the behind width.
 	 *
 	 * @param i The width the Sliding Menu will open to, in pixels
 	 */
 	@SuppressWarnings("deprecation")
 	public void setBehindWidth(int i) {
+	    mBehindOriginalWidth = i;
 		int width;
 		Display display = ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE))
 				.getDefaultDisplay();
@@ -701,7 +703,7 @@ public class SlidingMenu extends RelativeLayout {
 	public float getBehindScrollScale() {
 		return mViewBehind.getScrollScale();
 	}
-
+	
 	/**
 	 * Gets the touch mode margin threshold
 	 * @return the touch mode margin threshold
@@ -709,7 +711,7 @@ public class SlidingMenu extends RelativeLayout {
 	public int getTouchmodeMarginThreshold() {
 		return mViewBehind.getMarginThreshold();
 	}
-
+	
 	/**
 	 * Set the touch mode margin threshold
 	 * @param touchmodeMarginThreshold
@@ -924,17 +926,17 @@ public class SlidingMenu extends RelativeLayout {
 		mOpenListener = listener;
 	}
 
-
+	
 	/**
 	 * Sets the OnOpenListner for secondary menu  {@link OnOpenListener#onOpen() OnOpenListener.onOpen()} will be called when the secondary SlidingMenu is opened
-	 *
+	 * 
 	 * @param listener the new OnOpenListener
 	 */
-
+	
 	public void setSecondaryOnOpenListner(OnOpenListener listener) {
 		mSecondaryOpenListner = listener;
 	}
-
+	
 	/**
 	 * Sets the OnCloseListener. {@link OnCloseListener#onClose() OnCloseListener.onClose()} will be called when any one of the SlidingMenu is closed
 	 *
@@ -1090,26 +1092,72 @@ public class SlidingMenu extends RelativeLayout {
 	}
 
     private boolean visibleNavBar() {
-        Display d = getDisplay();
+        int realHeight = 0;
+        int realWidth  = 0;
+        int displayHeight = 0;
+        int displayWidth  = 0;
 
-        DisplayMetrics realDisplayMetrics = new DisplayMetrics();
-        d.getRealMetrics(realDisplayMetrics);
+	    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            Display d = getDisplay();
 
-        int realHeight = realDisplayMetrics.heightPixels;
-        int realWidth = realDisplayMetrics.widthPixels;
+            DisplayMetrics realDisplayMetrics = new DisplayMetrics();
+            d.getRealMetrics(realDisplayMetrics);
 
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        d.getMetrics(displayMetrics);
+            realHeight = realDisplayMetrics.heightPixels;
+            realWidth = realDisplayMetrics.widthPixels;
 
-        int displayHeight = displayMetrics.heightPixels;
-        int displayWidth = displayMetrics.widthPixels;
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            d.getMetrics(displayMetrics);
 
+            displayHeight = displayMetrics.heightPixels;
+            displayWidth = displayMetrics.widthPixels;
+        }
         return (realWidth - displayWidth) > 0 || (realHeight - displayHeight) > 0;
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void manageLayers(float percentOpen) {
-		
+		if (Build.VERSION.SDK_INT < 11) return;
+
+		boolean layer = percentOpen > 0.0f && percentOpen < 1.0f;
+		final int layerType = layer ? View.LAYER_TYPE_HARDWARE : View.LAYER_TYPE_NONE;
+
+		if (layerType != getContent().getLayerType()) {
+			getHandler().post(new Runnable() {
+				public void run() {
+					Log.v(TAG, "changing layerType. hardware? " + (layerType == View.LAYER_TYPE_HARDWARE));
+					getContent().setLayerType(layerType, null);
+					getMenu().setLayerType(layerType, null);
+					if (getSecondaryMenu() != null) {
+						getSecondaryMenu().setLayerType(layerType, null);
+					}
+				}
+			});
+		}
 	}
 
+	public float getPercentOpen() {
+		return mViewAbove.getPercentOpen();
+	}
+
+    public boolean isTablet() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            return getContext().getResources().getConfiguration().smallestScreenWidthDp >= 600;
+        } else
+            return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+                    && (getContent().getResources().getConfiguration().screenLayout &
+                    Configuration.SCREENLAYOUT_SIZE_MASK)
+                    >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+    }
+
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+
+        if(isTablet())
+            getLayoutParams().width = (int) (metrics.widthPixels * metrics.scaledDensity);
+            setBehindWidth(mBehindOriginalWidth);
+    }
 }
